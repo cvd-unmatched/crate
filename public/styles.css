@@ -1551,6 +1551,19 @@ dialog h2 + p {
   text-align: center;
 }
 
+.foot a {
+  margin-left: 6px;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 150ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .foot a:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
 /* ---------- small screens ---------- */
 
 @media (max-width: 900px) {
