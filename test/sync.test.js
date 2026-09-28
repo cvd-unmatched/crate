@@ -60,6 +60,16 @@ test('gifts survive a sync, even after leaving the collection', () => {
   assert.equal(Object.hasOwn(data.items, '2'), false);
 });
 
+test('where a record came from survives a sync and keeps it around', () => {
+  const data = { items: {} };
+  mergeCollection(data, [remote(1)]);
+  data.items['1'].source = 'rommelmarkt Patershol';
+  mergeCollection(data, [remote(1)]);
+  assert.equal(data.items['1'].source, 'rommelmarkt Patershol');
+  mergeCollection(data, []);
+  assert.equal(data.items['1'].inCollection, false);
+});
+
 test('toItem maps Discogs fields and drops malformed entries', () => {
   const item = toItem({
     instance_id: 123,

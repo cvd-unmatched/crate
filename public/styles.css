@@ -694,7 +694,7 @@ option {
   padding-block: 10px;
   border-top: 1px solid var(--border);
   content-visibility: auto;
-  contain-intrinsic-size: auto 64px;
+  contain-intrinsic-size: auto 84px;
 }
 
 .row:first-child {
@@ -796,9 +796,92 @@ input[type="checkbox"] {
   font-size: 13px;
 }
 
+.meta-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-top: 2px;
+}
+
+.source-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  height: 22px;
+  margin-left: -6px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: text;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
+}
+
+.source-field .icon {
+  width: 13px;
+  height: 13px;
+}
+
+.source {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+}
+
+.source::placeholder {
+  color: var(--muted);
+}
+
+.source::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
+
+.source-field:focus-within {
+  border-color: var(--border-strong);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.source-field:focus-within .source {
+  color: var(--text);
+}
+
+@supports (field-sizing: content) {
+  .source {
+    width: auto;
+    min-width: 4ch;
+    field-sizing: content;
+  }
+}
+
+/* An empty place stays out of sight until you point at the row, like the price fields. */
+@media (hover: hover) and (pointer: fine) {
+  .row .source-field:has(.source:placeholder-shown):not(:focus-within) {
+    opacity: 0;
+  }
+  .row:hover .source-field {
+    opacity: 1;
+  }
+  .source-field:hover:not(:focus-within) {
+    background: var(--fill);
+  }
+}
+
 .tag {
-  justify-self: start;
-  margin-top: 4px;
+  flex: none;
   padding: 0 6px;
   border: 1px solid var(--border);
   border-radius: 5px;
@@ -1502,7 +1585,7 @@ dialog h2 + p {
       "cells cells cells";
     row-gap: 12px;
     padding: 12px 14px;
-    contain-intrinsic-size: auto 150px;
+    contain-intrinsic-size: auto 170px;
   }
 
   .row:first-child {

@@ -15,6 +15,7 @@
       <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></symbol>
       <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></symbol>
       <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13" /><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" /><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5" /></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0" /><circle cx="12" cy="10" r="3" /></symbol>
       <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" /></symbol>
     </svg>
 
@@ -90,7 +91,7 @@
             <div class="toolbar">
               <label class="search">
                 <svg class="icon" aria-hidden="true"><use href="#i-search" /></svg>
-                <input id="search" type="search" placeholder="Search artist, title, label, cat#" aria-label="Search records" autocomplete="off" spellcheck="false" />
+                <input id="search" type="search" placeholder="Search artist, title, label, place" aria-label="Search records" autocomplete="off" spellcheck="false" />
                 <kbd aria-hidden="true">/</kbd>
               </label>
               <div class="segmented" role="group" aria-label="Filter">
@@ -175,6 +176,7 @@
       </form>
     </dialog>
 
+    <datalist id="places"></datalist>
     <ol class="toasts" id="toasts" aria-live="polite"></ol>
   </body>
 </html>

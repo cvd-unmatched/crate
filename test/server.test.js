@@ -102,8 +102,15 @@ test('only serves the allowlisted files', async () => {
 });
 
 test('rejects unknown Host headers (DNS rebinding)', async () => {
-  const res = await request('GET', '/api/state', { headers: { host: 'attacker.example' } });
-  assert.equal(res.status, 421);
+  for (const host of ['attacker.example', `attacker.example:${port}`, 'localhost.attacker.example']) {
+    assert.equal((await request('GET', '/api/state', { headers: { host } })).status, 421, host);
+  }
+});
+
+test('accepts localhost on any port, as when Docker maps a different one', async () => {
+  for (const host of ['localhost:8080', '127.0.0.1:80', '[::1]:5178', 'localhost']) {
+    assert.equal((await request('GET', '/api/state', { headers: { host } })).status, 200, host);
+  }
 });
 
 test('blocks cross-origin writes (CSRF)', async () => {
@@ -147,6 +154,14 @@ test('marks a record as a gift', async () => {
   assert.equal(res.status, 200);
   assert.equal(res.json().item.gift, true);
   assert.equal((await request('PATCH', '/api/items/2', { json: { gift: false } })).json().item.gift, false);
+});
+
+test('saves where a record came from', async () => {
+  const saved = await request('PATCH', '/api/items/2', { json: { source: '  rommelmarkt Patershol\u0007 ' } });
+  assert.equal(saved.json().item.source, 'rommelmarkt Patershol');
+  assert.equal((await request('PATCH', '/api/items/2', { json: { source: '   ' } })).json().item.source, null);
+  assert.equal((await request('PATCH', '/api/items/2', { json: { source: 'x'.repeat(81) } })).status, 400);
+  assert.equal((await request('PATCH', '/api/items/2', { json: { source: 5 } })).status, 400);
 });
 
 test('bundles records, edits and deletes the bundle', async () => {

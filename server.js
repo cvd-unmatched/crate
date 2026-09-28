@@ -20,10 +20,13 @@ const PORT = Number(process.env.PORT || 5178);
 const HOST = process.env.HOST || '127.0.0.1';
 const TOKEN = process.env.DISCOGS_TOKEN?.trim() || null;
 const DATA_FILE = path.resolve(root, process.env.DATA_DIR || 'data', 'collection.json');
-const EXTRA_HOSTS = (process.env.ALLOWED_HOSTS ?? '')
-  .split(',')
-  .map((host) => host.trim().toLowerCase())
-  .filter(Boolean);
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+const EXTRA_HOSTS = new Set(
+  (process.env.ALLOWED_HOSTS ?? '')
+    .split(',')
+    .map((host) => host.trim().toLowerCase())
+    .filter(Boolean),
+);
 const MAX_BODY_BYTES = 64 * 1024;
 const ITEM_ID = /^\d{1,20}$/;
 const BUNDLE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -58,7 +61,6 @@ class HttpError extends Error {
 }
 
 const store = await Store.open(DATA_FILE);
-let allowedHosts = new Set();
 let syncInFlight = null;
 
 const server = http.createServer(async (req, res) => {
@@ -74,8 +76,10 @@ const server = http.createServer(async (req, res) => {
 
 async function route(req, res) {
   // Rejecting unknown Host headers stops DNS-rebinding pages from talking to this server.
+  // Any port is fine: behind Docker the outside port can differ from ours.
   const host = String(req.headers.host ?? '').toLowerCase();
-  if (!allowedHosts.has(host)) {
+  const hostname = host.replace(/:\d+$/, '');
+  if (!LOOPBACK_HOSTS.has(hostname) && !EXTRA_HOSTS.has(hostname) && !EXTRA_HOSTS.has(host)) {
     console.warn(`Blocked request for unknown host ${JSON.stringify(host.slice(0, 200))}. Add it to ALLOWED_HOSTS if that's you.`);
     throw new HttpError(421, 'Unknown host');
   }
@@ -126,6 +130,7 @@ async function api(req, res, pathname) {
       for (const key of ['paid', 'shipping', 'sold']) {
         if (Object.hasOwn(body, key)) target[key] = cents(body[key], key);
       }
+      if (Object.hasOwn(body, 'source')) target.source = text(body.source, null);
       if (Object.hasOwn(body, 'gift')) {
         if (typeof body.gift !== 'boolean') throw new HttpError(400, 'Invalid gift value');
         target.gift = body.gift;
@@ -266,9 +271,9 @@ function cents(value, field) {
 
 function text(value, fallback) {
   if (value == null) return fallback;
-  if (typeof value !== 'string') throw new HttpError(400, 'Invalid name');
+  if (typeof value !== 'string') throw new HttpError(400, 'Invalid text');
   const cleaned = value.replace(/[\u0000-\u001f\u007f]/g, '').trim();
-  if (cleaned.length > 80) throw new HttpError(400, 'Names can be 80 characters at most');
+  if (cleaned.length > 80) throw new HttpError(400, 'Keep it to 80 characters or fewer');
   return cleaned || fallback;
 }
 
@@ -281,9 +286,17 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+// `docker stop` sends SIGTERM: stop taking requests, let any save in progress finish, then exit.
+for (const signal of ['SIGTERM', 'SIGINT']) {
+  process.once(signal, async () => {
+    server.close();
+    await store.idle();
+    process.exit(0);
+  });
+}
+
 server.listen(PORT, HOST, () => {
   const { port } = server.address();
-  allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`, ...EXTRA_HOSTS]);
   console.log(`Crate running at http://localhost:${port}`);
   if (!TOKEN) console.log('No DISCOGS_TOKEN yet: copy .env.example to .env and paste your token in.');
   if (!['127.0.0.1', '::1', 'localhost'].includes(HOST)) {

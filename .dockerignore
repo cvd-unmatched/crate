@@ -1,0 +1,7 @@
+# Never send secrets or personal data into the build.
+.env
+data/
+.git/
+.github/
+.claude/
+test/

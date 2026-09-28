@@ -26,6 +26,7 @@ const rows = new Map();
 const bundleCards = new Map();
 let ledger = computeLedger([], new Map());
 let bundleShape = null;
+let placesKey = '';
 let lastChecked = null;
 let fmt;
 
@@ -214,11 +215,7 @@ function moneyInput(label, field, onCommit) {
       input.blur();
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      // Spreadsheet-style: Enter saves and moves to the same field on the next record.
-      const next = nextField(input, field, event.shiftKey ? 'previousElementSibling' : 'nextElementSibling');
-      input.blur();
-      next?.focus();
-      next?.select();
+      advance(input, field, event.shiftKey);
     }
   });
 
@@ -230,6 +227,14 @@ function moneyInput(label, field, onCommit) {
       if (document.activeElement !== input) show();
     },
   };
+}
+
+/** Spreadsheet-style: blurring saves, then focus moves to the same field on the next (or previous) record. */
+function advance(input, field, backwards) {
+  const next = nextField(input, field, backwards ? 'previousElementSibling' : 'nextElementSibling');
+  input.blur();
+  next?.focus();
+  next?.select();
 }
 
 function nextField(input, field, direction) {
@@ -292,6 +297,31 @@ function createRow(item) {
   );
   const shipping = moneyInput(`Shipping for ${item.title}`, 'shipping', (value) => saveItem(id, { shipping: value }));
   const sold = moneyInput(`Sold ${item.title} for`, 'sold', (value) => saveItem(id, { sold: value }));
+  const source = h('input', {
+    class: 'source',
+    type: 'text',
+    list: 'places',
+    maxlength: '80',
+    autocomplete: 'off',
+    spellcheck: 'false',
+    placeholder: 'Where did you get it?',
+    'aria-label': `Where you got ${item.title}`,
+    'data-field': 'source',
+  });
+  source.addEventListener('blur', () => {
+    const value = source.value.trim();
+    source.value = value;
+    if (value !== (state.items.get(id).source ?? '')) saveItem(id, { source: value || null });
+  });
+  source.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      source.value = state.items.get(id).source ?? '';
+      source.blur();
+    } else if (event.key === 'Enter') {
+      // Wait a tick so picking a suggestion with Enter fills the field before we move on.
+      setTimeout(() => advance(source, 'source', event.shiftKey));
+    }
+  });
   const share = h('span', { class: 'amount' });
   const chip = h('button', { type: 'button', class: 'chip', onclick: () => showBundle(state.items.get(id).bundleId) });
   const bundled = h('span', { class: 'bundled' }, share, chip);
@@ -308,7 +338,12 @@ function createRow(item) {
       { class: 'meta' },
       h('p', { class: 'title' }, releaseLink(item)),
       h('p', { class: 'sub' }, [item.artist, item.year, item.format].filter(Boolean).join(' · ')),
-      item.inCollection ? null : h('span', { class: 'tag' }, 'No longer on Discogs'),
+      h(
+        'div',
+        { class: 'meta-line' },
+        h('label', { class: 'source-field' }, icon('pin'), source),
+        item.inCollection ? null : h('span', { class: 'tag' }, 'No longer on Discogs'),
+      ),
     ),
     h(
       'div',
@@ -328,6 +363,7 @@ function createRow(item) {
     gift,
     shipping,
     sold,
+    source,
     share,
     chip,
     bundled,
@@ -346,6 +382,7 @@ function patchRow(row, item) {
   row.gift.setAttribute('aria-pressed', String(Boolean(item.gift)));
   row.gift.title = item.gift ? 'Gift. Click to enter a price instead' : 'Mark as a gift';
   row.sold.set(item.sold);
+  if (document.activeElement !== row.source) row.source.value = item.source ?? '';
   row.shipping.set(item.shipping);
   row.shipping.el.hidden = Boolean(bundle);
   row.bundled.hidden = !bundle;
@@ -362,7 +399,9 @@ function patchRow(row, item) {
 function renderRecords({ animate = false } = {}) {
   const query = state.query.trim().toLocaleLowerCase();
   const matches = [...state.items.values()].filter(
-    (item) => FILTERS[state.filter](item) && (!query || rows.get(item.instanceId).text.includes(query)),
+    (item) =>
+      FILTERS[state.filter](item) &&
+      (!query || `${rows.get(item.instanceId).text} ${item.source ?? ''}`.toLocaleLowerCase().includes(query)),
   );
   matches.sort(SORTS[state.sort]);
 
@@ -724,6 +763,17 @@ function renderCounts() {
   $('#count-bundles').textContent = state.bundles.size ? state.bundles.size.toLocaleString() : '';
 }
 
+/** Feeds the place suggestions, most used first. */
+function renderPlaces() {
+  const counts = new Map();
+  for (const { source } of state.items.values()) if (source) counts.set(source, (counts.get(source) ?? 0) + 1);
+  const places = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || collator.compare(a, b));
+  const key = places.join('\n');
+  if (key === placesKey) return;
+  placesKey = key;
+  $('#places').replaceChildren(...places.map((place) => h('option', { value: place })));
+}
+
 function renderSynced() {
   const el = $('#synced');
   if (!state.lastSyncedAt) {
@@ -741,6 +791,7 @@ function recompute() {
   for (const [id, row] of rows) patchRow(row, state.items.get(id));
   renderStats();
   renderCounts();
+  renderPlaces();
   renderBundles();
   renderSelection();
 }

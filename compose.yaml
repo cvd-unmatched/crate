@@ -1,0 +1,21 @@
+services:
+  crate:
+    # Pin the version you tagged on GitHub (see "Releasing an image" in the README).
+    image: ghcr.io/cvd-unmatched/crate:1.0.0
+    container_name: crate
+    restart: unless-stopped
+    # DISCOGS_TOKEN (and optionally ALLOWED_HOSTS) come from .env next to this file.
+    env_file: .env
+    environment:
+      # Set here so a HOST/PORT/DATA_DIR line in .env can't break the container.
+      HOST: 0.0.0.0
+      PORT: 5178
+      DATA_DIR: /data
+    ports:
+      # Only reachable from this machine. See the README before changing it.
+      - "127.0.0.1:5178:5178"
+    volumes:
+      - crate-data:/data
+
+volumes:
+  crate-data:
