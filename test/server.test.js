@@ -38,7 +38,7 @@ before(async () => {
   );
   server = spawn(process.execPath, ['server.js'], {
     cwd: root,
-    env: { ...process.env, PORT: '0', HOST: '127.0.0.1', DATA_DIR: dataDir, DISCOGS_TOKEN: '', ALLOWED_HOSTS: '' },
+    env: { ...process.env, PORT: '0', HOST: '127.0.0.1', DATA_DIR: dataDir, DISCOGS_TOKEN: '', ALLOWED_HOSTS: '', CRATE_VERSION: '' },
   });
   port = await new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('server did not start')), 10_000);
@@ -93,6 +93,10 @@ test('serves the page with strict security headers', async () => {
   assert.equal(res.headers['x-content-type-options'], 'nosniff');
   assert.equal(res.headers['referrer-policy'], 'no-referrer');
   assert.equal(res.headers['access-control-allow-origin'], undefined);
+});
+
+test('reports the running version', async () => {
+  assert.equal((await request('GET', '/api/state')).json().version, 'dev');
 });
 
 test('only serves the allowlisted files', async () => {

@@ -12,6 +12,8 @@
   --on-primary: #fafafa;
   --up: #166534;
   --down: #b91c1c;
+  --gift: #be185d;
+  --gift-bg: #fce7f3;
   --ring: rgb(23 23 23 / 0.1);
   --flash: rgb(23 23 23 / 0.16);
   --image-edge: rgb(0 0 0 / 0.06);
@@ -55,6 +57,8 @@
     --on-primary: #0a0a0a;
     --up: #4ade80;
     --down: #f87171;
+    --gift: #f9a8d4;
+    --gift-bg: rgb(244 114 182 / 0.16);
     --ring: rgb(237 237 237 / 0.14);
     --flash: rgb(237 237 237 / 0.22);
     --image-edge: rgb(255 255 255 / 0.06);
@@ -869,11 +873,8 @@ input[type="checkbox"] {
 
 /* An empty place stays out of sight until you point at the row, like the price fields. */
 @media (hover: hover) and (pointer: fine) {
-  .row .source-field:has(.source:placeholder-shown):not(:focus-within) {
+  .row:not(:hover) .source-field:has(.source:placeholder-shown):not(:focus-within) {
     opacity: 0;
-  }
-  .row:hover .source-field {
-    opacity: 1;
   }
   .source-field:hover:not(:focus-within) {
     background: var(--fill);
@@ -1104,8 +1105,12 @@ input[type="checkbox"] {
 
 .gift[aria-pressed="true"] {
   padding: 0 9px;
-  background: var(--fill);
-  color: var(--text);
+  background: var(--gift-bg);
+  color: var(--gift);
+}
+
+.is-gift {
+  color: var(--gift);
 }
 
 .gift[aria-pressed="true"] .gift-label {
@@ -1121,11 +1126,11 @@ input[type="checkbox"] {
     opacity: 1;
   }
   .gift:hover {
-    background: var(--fill);
-    color: var(--text);
+    background: var(--gift-bg);
+    color: var(--gift);
   }
   .gift[aria-pressed="true"]:hover {
-    background: var(--border);
+    background: color-mix(in srgb, var(--gift) 22%, var(--surface));
   }
 }
 
@@ -1545,14 +1550,21 @@ dialog h2 + p {
 /* ---------- footer ---------- */
 
 .foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
   margin-top: 40px;
   color: var(--muted);
   font-size: 12.5px;
   text-align: center;
 }
 
+#version {
+  font-variant-numeric: tabular-nums;
+}
+
 .foot a {
-  margin-left: 6px;
   text-decoration-color: var(--border-strong);
   text-underline-offset: 3px;
   transition: text-decoration-color 150ms ease;

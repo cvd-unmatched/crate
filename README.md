@@ -55,6 +55,8 @@ Set these in `.env`. `compose.yaml` loads it with `env_file`.
 
 `compose.yaml` pins `HOST`, `PORT` and `DATA_DIR` under `environment:`, which wins over `.env`, so a stray line in `.env` can't break the container.
 
+The image also sets `CRATE_VERSION` to the release it was built from; it's shown at the bottom of the page. You don't need to set it. Running from source shows `dev`.
+
 ### Reaching it from other devices
 
 Crate has **no login**, so never publish it to the internet. To use it from your phone or laptop, go through Tailscale:

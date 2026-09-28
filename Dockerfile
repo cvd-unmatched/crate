@@ -1,6 +1,10 @@
 FROM node:24.21.0-alpine3.24
 
-ENV NODE_ENV=production \
+# The release workflow passes the git tag's version (e.g. 1.0.1); shown in the page footer.
+ARG VERSION=dev
+
+ENV CRATE_VERSION=$VERSION \
+    NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=5178 \
     DATA_DIR=/data

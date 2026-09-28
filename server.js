@@ -19,6 +19,8 @@ try {
 const PORT = Number(process.env.PORT || 5178);
 const HOST = process.env.HOST || '127.0.0.1';
 const TOKEN = process.env.DISCOGS_TOKEN?.trim() || null;
+// Stamped into the image by the release workflow; running from source shows "dev".
+const VERSION = process.env.CRATE_VERSION?.trim() || 'dev';
 const DATA_FILE = path.resolve(root, process.env.DATA_DIR || 'data', 'collection.json');
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 const EXTRA_HOSTS = new Set(
@@ -197,6 +199,7 @@ async function syncCollection() {
 function snapshot() {
   const { username, currency, lastSyncedAt, items, bundles } = store.data;
   return {
+    version: VERSION,
     configured: Boolean(TOKEN),
     username,
     currency,

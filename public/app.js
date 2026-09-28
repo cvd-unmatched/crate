@@ -667,6 +667,7 @@ function patchBundle(card, bundle, totals) {
   for (const line of card.lines) {
     const item = state.items.get(line.id);
     line.paid.textContent = item?.gift ? 'Gift' : formatMoney(item?.paid);
+    line.paid.classList.toggle('is-gift', Boolean(item?.gift));
     line.share.textContent = `+ ${formatMoney(ledger.rows.get(line.id)?.ship ?? 0)}`;
   }
   const unpriced = totals.unpriced ? ` (${totals.unpriced} unpriced)` : '';
@@ -815,6 +816,7 @@ function applyState(data, { animate = false } = {}) {
   $('#app').hidden = !ready;
   $('#refresh').hidden = !ready;
   $('#who').textContent = state.username ? `@${state.username}` : '';
+  $('#version').textContent = data.version === 'dev' ? 'dev' : `v${data.version}`;
   renderSynced();
 
   recompute();
