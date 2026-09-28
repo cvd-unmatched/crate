@@ -1,0 +1,14 @@
+{
+  "name": "crate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Track what you paid for, and sold, the records in your Discogs collection.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.1"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  }
+}
