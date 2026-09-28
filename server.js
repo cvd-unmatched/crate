@@ -62,7 +62,13 @@ class HttpError extends Error {
   }
 }
 
-const store = await Store.open(DATA_FILE);
+let store;
+try {
+  store = await Store.open(DATA_FILE);
+} catch (err) {
+  console.error(err.message);
+  process.exit(1);
+}
 let syncInFlight = null;
 
 const server = http.createServer(async (req, res) => {

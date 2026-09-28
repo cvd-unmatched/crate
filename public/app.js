@@ -26,7 +26,7 @@ const rows = new Map();
 const bundleCards = new Map();
 let ledger = computeLedger([], new Map());
 let bundleShape = null;
-let placesKey = '';
+const suggestionKeys = {};
 let lastChecked = null;
 let fmt;
 
@@ -308,6 +308,7 @@ function createRow(item) {
     'aria-label': `Where you got ${item.title}`,
     'data-field': 'source',
   });
+  const sourceIcon = icon('pin');
   source.addEventListener('blur', () => {
     const value = source.value.trim();
     source.value = value;
@@ -341,7 +342,7 @@ function createRow(item) {
       h(
         'div',
         { class: 'meta-line' },
-        h('label', { class: 'source-field' }, icon('pin'), source),
+        h('label', { class: 'source-field' }, sourceIcon, source),
         item.inCollection ? null : h('span', { class: 'tag' }, 'No longer on Discogs'),
       ),
     ),
@@ -364,6 +365,7 @@ function createRow(item) {
     shipping,
     sold,
     source,
+    sourceIcon,
     share,
     chip,
     bundled,
@@ -383,6 +385,12 @@ function patchRow(row, item) {
   row.gift.title = item.gift ? 'Gift. Click to enter a price instead' : 'Mark as a gift';
   row.sold.set(item.sold);
   if (document.activeElement !== row.source) row.source.value = item.source ?? '';
+  // For a gift, "where did you get it" becomes "who gave it to you".
+  const gift = Boolean(item.gift);
+  row.sourceIcon.firstChild.setAttribute('href', gift ? '#i-user' : '#i-pin');
+  row.source.placeholder = gift ? 'Who gave it to you?' : 'Where did you get it?';
+  row.source.setAttribute('aria-label', gift ? `Who gave you ${item.title}` : `Where you got ${item.title}`);
+  row.source.setAttribute('list', gift ? 'givers' : 'places');
   row.shipping.set(item.shipping);
   row.shipping.el.hidden = Boolean(bundle);
   row.bundled.hidden = !bundle;
@@ -764,15 +772,21 @@ function renderCounts() {
   $('#count-bundles').textContent = state.bundles.size ? state.bundles.size.toLocaleString() : '';
 }
 
-/** Feeds the place suggestions, most used first. */
-function renderPlaces() {
-  const counts = new Map();
-  for (const { source } of state.items.values()) if (source) counts.set(source, (counts.get(source) ?? 0) + 1);
-  const places = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || collator.compare(a, b));
-  const key = places.join('\n');
-  if (key === placesKey) return;
-  placesKey = key;
-  $('#places').replaceChildren(...places.map((place) => h('option', { value: place })));
+/** Feeds the suggestions, most used first: places for bought records, people for gifts. */
+function renderSuggestions() {
+  const lists = { places: new Map(), givers: new Map() };
+  for (const { source, gift } of state.items.values()) {
+    if (!source) continue;
+    const counts = gift ? lists.givers : lists.places;
+    counts.set(source, (counts.get(source) ?? 0) + 1);
+  }
+  for (const [id, counts] of Object.entries(lists)) {
+    const values = [...counts.keys()].sort((a, b) => counts.get(b) - counts.get(a) || collator.compare(a, b));
+    const key = values.join('\n');
+    if (key === suggestionKeys[id]) continue;
+    suggestionKeys[id] = key;
+    $(`#${id}`).replaceChildren(...values.map((value) => h('option', { value })));
+  }
 }
 
 function renderSynced() {
@@ -792,7 +806,7 @@ function recompute() {
   for (const [id, row] of rows) patchRow(row, state.items.get(id));
   renderStats();
   renderCounts();
-  renderPlaces();
+  renderSuggestions();
   renderBundles();
   renderSelection();
 }

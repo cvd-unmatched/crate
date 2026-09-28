@@ -4,7 +4,7 @@ A small self-hosted site that pulls in your Discogs collection so you can record
 
 - **Refresh** pulls your collection from Discogs whenever you press it.
 - **Paid / Shipping / Sold** are editable per record. Hover a row, click the field, type `12.50` or `12,50`. Enter saves and jumps to the next record, Esc cancels.
-- **Gifts**: hover a row and click the gift icon next to Paid. A gift counts as paid nothing; any price you typed before is kept and comes back if you undo it.
+- **Gifts**: hover a row and click the gift icon next to Paid. A gift counts as paid nothing; any price you typed before is kept and comes back if you undo it. For a gift, the line under the title asks who gave it to you instead of where you got it.
 - **Where you got it**: hover a row and click "Where did you get it?" under the title (say, `rommelmarkt Patershol`). Places you've used before are suggested as you type, and search finds them.
 - **Bundles**: tick the records from one order (shift-click selects a range), choose **New bundle**, and enter the shipping once. It's split evenly across the records (leftover cents go to the first ones, so the parts always add up exactly) and shown separately from each record's price.
 - **Cost** = paid + shipping (or shipping share). **Profit** = sold − cost, only when the purchase price is known.
